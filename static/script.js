@@ -1,0 +1,89 @@
+const ws = new WebSocket('ws://localhost:8777/ws');
+
+ws.onopen = function() {
+  console.log('WebSocket connection opened');
+}
+
+ws.onmessage = function(event) {
+    console.log(event.data);
+}
+
+ws.onerror = function(error) {
+  alert.error('WebSocket error:', error);
+}
+
+ws.onclose = function() {
+    console.log('WebSocket connection closed');
+}
+
+
+class Card {
+  constructor(id, title, texts=[]) {
+    this.id = id;
+    this.title = title;
+    this.texts = texts;
+    this.element = this.createCardElement();
+  }
+
+  createCardElement() {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card';
+
+    const title = document.createElement('h2');
+    title.textContent = this.title;
+    cardDiv.appendChild(title);
+
+    const textList = document.createElement('ul');
+    this.texts.forEach(text => {
+      const listItem = document.createElement('li');
+      listItem.textContent = text;
+      textList.appendChild(listItem);
+    });
+
+    const removeButton = document.createElement('button');
+    removeButton.textContent = '-';
+    removeButton.addEventListener('click', () => {
+      sendAction({RemoveCard: {id: this.id}});
+      setTimeout(fetchData, 100);
+    });
+    cardDiv.appendChild(removeButton);
+
+    return cardDiv;
+  }
+}
+
+
+
+function sendAction(msg) {
+  ws.send(JSON.stringify(msg));
+}
+
+
+
+function fetchData() {
+    fetch('http://localhost:8777/board')
+    .then(response => response.json())
+    .then(data => showData(data))
+    .catch(error => console.error('Error fetching data:', error));
+
+    // console.log(data);
+
+    // showData(data);
+}
+
+function showData(data) {
+  const cardsDiv = document.getElementById('cards');
+  cardsDiv.innerHTML = '';
+  
+  data.cards.forEach(card => {
+    const newCard = new Card(card.id, card.title, card.texts);
+    cardsDiv.appendChild(newCard.element);
+  });
+}
+
+document.getElementById('add-card').addEventListener('click', () => {
+  sendAction({AddCard: null});
+  setTimeout(fetchData, 100);
+});
+
+window.onload = fetchData;
