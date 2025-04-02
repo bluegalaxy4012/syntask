@@ -6,6 +6,34 @@ ws.onopen = function() {
 
 ws.onmessage = function(event) {
     console.log(event.data);
+
+    if(event.data.startsWith('BROADCASTM:')) {
+      // console.log(event.data.substring(11));
+      try {
+        const [username, dataJSON] = event.data.substring(11).split('|');
+
+        const data = JSON.parse(dataJSON);
+        showData(data);
+
+        document.getElementById('status').textContent = `${username} updated board`;
+        setTimeout(() => {
+          document.getElementById('status').textContent = '';
+        }, 3000);
+      }
+      catch (e) {
+        console.error('error parsing JSON:', e);
+      }
+    }
+    else if(event.data.startsWith('enter')) {
+        const username = prompt("Enter your name:");
+        if(username) {
+            ws.send(username);
+            document.getElementById('status').textContent = `Welcome ${username}`;
+            setTimeout(() => {
+              document.getElementById('status').textContent = '';
+            }, 3000);
+        }
+    }
 }
 
 ws.onerror = function(error) {
