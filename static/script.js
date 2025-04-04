@@ -59,20 +59,43 @@ class Card {
 
     const title = document.createElement('h2');
     title.textContent = this.title;
+    title.addEventListener('dblclick', () => {
+      const newTitle = prompt('Edit title, enter new title:');
+      if (newTitle) {
+        sendAction({EditTitle: {card_id: this.id, text: newTitle}});
+      }
+    });
     cardDiv.appendChild(title);
 
     const textList = document.createElement('ul');
-    this.texts.forEach(text => {
+    this.texts.forEach((text, index) => {
       const listItem = document.createElement('li');
       listItem.textContent = text;
+
+      listItem.addEventListener('dblclick', () => {
+        const newText = prompt('Edit text, enter new text:');
+        if (newText) {
+          sendAction({EditText: {card_id: this.id, text: newText, text_index: index}});
+        }
+
+      });
       textList.appendChild(listItem);
     });
+    cardDiv.appendChild(textList);
+
+    const addTextButton = document.createElement('button');
+    addTextButton.textContent = '+';
+    addTextButton.addEventListener('click', () => {
+      sendAction({AddText: {card_id: this.id, text: 'New text'}});
+    });
+    cardDiv.appendChild(addTextButton);
+
+
 
     const removeButton = document.createElement('button');
     removeButton.textContent = '-';
     removeButton.addEventListener('click', () => {
       sendAction({RemoveCard: {id: this.id}});
-      setTimeout(fetchData, 100);
     });
     cardDiv.appendChild(removeButton);
 
@@ -84,6 +107,7 @@ class Card {
 
 function sendAction(msg) {
   ws.send(JSON.stringify(msg));
+  setTimeout(fetchData, 100);
 }
 
 

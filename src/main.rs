@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{fs::{File, OpenOptions}, io::{Read, Write}, sync::Mutex};
 
 use actix::Addr;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
@@ -94,6 +94,10 @@ impl actix::StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
                 eprintln!("serialization error: {}", e);
                 "{}".to_string()
             });
+
+            let mut file = OpenOptions::new().write(true).create(true).truncate(true).open("board.json").unwrap();
+            file.write_all(board_json.as_bytes()).unwrap();
+
             drop(board);
             //self.broadcast_update();
             
@@ -140,9 +144,22 @@ async fn get_board(data: web::Data<AppState>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    let existing_board = match File::open("board.json") {
+      Ok(mut file) => {
+        let mut board_json = String::new();
+        file.read_to_string(&mut board_json)?;
+        serde_json::from_str(&board_json).unwrap_or_else(|_| Board::new())
+
+
+      } 
+
+      Err(_) => Board::new(), 
+    };
+
     let data = web::Data::new(AppState {
         clients: Mutex::new(Vec::new()),
-        board: Mutex::new(Board::new()),
+        board: Mutex::new(existing_board),
     });
 
     HttpServer::new(move || App::new()

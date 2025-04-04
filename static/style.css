@@ -9,6 +9,15 @@
     background-color: #aa2222;
 }
 
+.card:hover {
+    background-color: #ca3c3c;
+    transition: background-color 0.2s ease;
+}
+
+.card button {
+    cursor: pointer;
+}
+
 #cards
 {
     display: flex;
